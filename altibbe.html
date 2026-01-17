@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Product Registry — Disclosure Interface</title>
+
+    <style>
+        /* ---------------------------
+   DESIGN TOKENS
+--------------------------- */
+
+        :root {
+            --bg: #f6f7f9;
+            --card: #ffffff;
+            --border: #e2e6ea;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --accent: #2563eb;
+
+            --draft: #9ca3af;
+            --submitted: #f59e0b;
+            --published: #16a34a;
+
+            --radius: 10px;
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 16px;
+            --space-4: 24px;
+            --space-5: 32px;
+
+            --transition: 180ms ease;
+        }
+
+        /* ---------------------------
+   BASE
+--------------------------- */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+            color: var(--text);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: var(--space-5);
+        }
+
+        h1 {
+            font-size: 22px;
+            margin-bottom: var(--space-4);
+        }
+
+        /* ---------------------------
+   TOOLBAR
+--------------------------- */
+
+        .toolbar {
+            display: grid;
+            grid-template-columns: 1fr repeat(3, auto);
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+        }
+
+        input,
+        select {
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* ---------------------------
+   GRID
+--------------------------- */
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--space-4);
+        }
+
+        /* ---------------------------
+   CARD
+--------------------------- */
+
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: var(--space-4);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: transform var(--transition), box-shadow var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, .05);
+        }
+
+        .card:focus {
+            outline: 2px solid var(--accent);
+        }
+
+        .card h3 {
+            margin: 0 0 8px;
+            font-size: 16px;
+        }
+
+        .meta {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+
+        /* ---------------------------
+   BADGES
+--------------------------- */
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 999px;
+            font-weight: 600;
+        }
+
+        .badge::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .draft {
+            color: var(--draft);
+            background: #f3f4f6;
+        }
+
+        .submitted {
+            color: var(--submitted);
+            background: #fef3c7;
+        }
+
+        .published {
+            color: var(--published);
+            background: #dcfce7;
+        }
+
+        /* ---------------------------
+   DETAIL PANEL
+--------------------------- */
+
+        .detail {
+            margin-top: var(--space-5);
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: var(--space-5);
+            border: 1px solid var(--border);
+            opacity: 0;
+            transform: translateY(6px);
+            transition: all var(--transition);
+        }
+
+        .detail.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section {
+            margin-bottom: var(--space-4);
+        }
+
+        .section h4 {
+            margin-bottom: 8px;
+        }
+
+        .disclaimer {
+            font-size: 13px;
+            color: var(--muted);
+            background: #f9fafb;
+            padding: 12px;
+            border-left: 4px solid var(--accent);
+        }
+
+        /* ---------------------------
+   SKELETON
+--------------------------- */
+
+        .skeleton {
+            height: 110px;
+            border-radius: var(--radius);
+            background: linear-gradient(90deg, #eee, #f5f5f5, #eee);
+            background-size: 200%;
+            animation: shimmer 1.2s infinite;
+        }
+
+        @keyframes shimmer {
+            from {
+                background-position: 0%;
+            }
+
+            to {
+                background-position: 200%;
+            }
+        }
+
+        /* ---------------------------
+   EMPTY STATE
+--------------------------- */
+
+        .empty {
+            padding: var(--space-5);
+            text-align: center;
+            color: var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Product Disclosure Registry</h1>
+
+        <div class="toolbar">
+            <input id="search" placeholder="Search by product or producer name" />
+
+            <select id="categoryFilter">
+                <option value="">All Categories</option>
+                <option value="Medical">Medical</option>
+                <option value="Finance">Finance</option>
+                <option value="Energy">Energy</option>
+            </select>
+
+            <select id="statusFilter">
+                <option value="">All Status</option>
+                <option value="Draft">Draft</option>
+                <option value="Submitted">Submitted</option>
+                <option value="Published">Published</option>
+            </select>
+
+            <select id="sort">
+                <option value="date">Sort by Date</option>
+                <option value="name">Sort by Name</option>
+            </select>
+        </div>
+
+        <div id="list" class="grid"></div>
+
+        <div id="detail" class="detail"></div>
+
+    </div>
+
+    <script>
+
+        /* ---------------------------
+           MOCK DATA
+        --------------------------- */
+
+        const products = [
+            {
+                id: 1,
+                name: "HealthTrack AI",
+                category: "Medical",
+                producer: "MedTech Labs",
+                status: "Published",
+                updated: "2026-01-10",
+                declaredBy: "MedTech Compliance Team",
+                evidence: 2,
+                versions: [
+                    { date: "2025-12-10", status: "Submitted" },
+                    { date: "2026-01-10", status: "Published" }
+                ]
+            },
+            {
+                id: 2,
+                name: "FinGuard Analytics",
+                category: "Finance",
+                producer: "SecureBank Systems",
+                status: "Submitted",
+                updated: "2026-01-08",
+                declaredBy: "Risk Reporting Unit",
+                evidence: 1,
+                versions: [
+                    { date: "2026-01-02", status: "Draft" },
+                    { date: "2026-01-08", status: "Submitted" }
+                ]
+            },
+            {
+                id: 3,
+                name: "SolarGrid Monitor",
+                category: "Energy",
+                producer: "GreenVolt Corp",
+                status: "Draft",
+                updated: "2026-01-05",
+                declaredBy: "Engineering Team",
+                evidence: 0,
+                versions: [
+                    { date: "2026-01-01", status: "Draft" },
+                    { date: "2026-01-05", status: "Draft" }
+                ]
+            }
+        ];
+
+        const list = document.getElementById("list");
+        const detail = document.getElementById("detail");
+
+        /* ---------------------------
+           INITIAL LOADING STATE
+        --------------------------- */
+
+        function showSkeleton() {
+            list.innerHTML = "";
+            for (let i = 0; i < 6; i++) {
+                const sk = document.createElement("div");
+                sk.className = "skeleton";
+                list.appendChild(sk);
+            }
+        }
+
+        showSkeleton();
+
+        setTimeout(render, 700);
+
+        /* ---------------------------
+           RENDER
+        --------------------------- */
+
+        function render() {
+
+            let data = [...products];
+
+            const search = document.getElementById("search").value.toLowerCase();
+            const cat = categoryFilter.value;
+            const status = statusFilter.value;
+            const sort = document.getElementById("sort").value;
+
+            data = data.filter(p =>
+                (p.name.toLowerCase().includes(search) ||
+                    p.producer.toLowerCase().includes(search)) &&
+                (!cat || p.category === cat) &&
+                (!status || p.status === status)
+            );
+
+            if (sort === "name") {
+                data.sort((a, b) => a.name.localeCompare(b.name));
+            } else {
+                data.sort((a, b) => new Date(b.updated) - new Date(a.updated));
+            }
+
+            list.innerHTML = "";
+
+            if (!data.length) {
+                list.innerHTML = `<div class="empty">
+   No disclosed products match your current filters.
+   </div>`;
+                return;
+            }
+
+            data.forEach(p => {
+                const card = document.createElement("div");
+                card.className = "card";
+                card.tabIndex = 0;
+                card.innerHTML = `
+   <h3>${p.name}</h3>
+   <div class="meta">${p.category} · ${p.producer}</div>
+   <span class="badge ${p.status.toLowerCase()}">${p.status}</span>
+   <div class="meta">Last updated: ${p.updated}</div>
+  `;
+
+                card.onclick = () => showDetail(p);
+                card.onkeydown = e => { if (e.key === "Enter") showDetail(p); }
+
+                list.appendChild(card);
+            });
+
+        }
+
+        /* ---------------------------
+           DETAIL VIEW
+        --------------------------- */
+
+        function showDetail(p) {
+
+            detail.classList.remove("active");
+
+            setTimeout(() => {
+
+                detail.innerHTML = `
+  <div class="section">
+   <h3>${p.name}</h3>
+   <p class="meta">${p.category} · Provided by ${p.producer}</p>
+  </div>
+
+  <div class="section">
+   <h4>Disclosure Summary</h4>
+   <p>Declared by: ${p.declaredBy}</p>
+   <p>Declaration date: ${p.updated}</p>
+   <p>Evidence attached by producer: ${p.evidence}</p>
+  </div>
+
+  <div class="section">
+   <h4>Version History</h4>
+   ${p.versions.map(v => `
+     <p>${v.date} — ${v.status}</p>
+   `).join("")}
+  </div>
+
+  <div class="disclaimer">
+   This page presents producer-declared information; it is not certification or verification.
+  </div>
+ `;
+
+                detail.classList.add("active");
+
+            }, 100);
+        }
+
+        /* ---------------------------
+           EVENTS
+        --------------------------- */
+
+        search.oninput = render;
+        categoryFilter.onchange = render;
+        statusFilter.onchange = render;
+        sort.onchange = render;
+
+    </script>
+
+</body>
+
+</html>
